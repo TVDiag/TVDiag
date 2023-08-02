@@ -20,7 +20,6 @@ class MultiModalDataSet(Dataset):
 
             root, type = instance_labels[i], type_labels[i]
 
-            # 若有0入度节点，给这些节点加自环
             in_degrees = graph.in_degrees()
             zero_indegree_nodes = [i for i in range(len(in_degrees)) if in_degrees[i].item() == 0]
             for node in zero_indegree_nodes:

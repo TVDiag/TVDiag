@@ -20,7 +20,6 @@ def read_text(path):
 #         text.append(line[:-12])
         text.append(line.split('\t')[0])
     f.close()
-    # 去最后的空串
     return text[:-1]
 
 
@@ -29,20 +28,18 @@ def sentence_embedding(type, source_path, train_path, test_path, save_path, serv
 
     train_text = read_text(train_path)
     test_text = read_text(test_path)
-    vectorizer = CountVectorizer(lowercase=False, token_pattern=r'(?u)\b\S\S+')  # 该类会将文本中的词语转换为词频矩阵，矩阵元素a[i][j] 表示j词在i类文本下的词频
-    transformer = TfidfTransformer()  # 该类会统计每个词语的tf-idf权值
-    # 第一个fit_transform是计算tf-idf，第二个fit_transform是将文本转为词频矩阵
+    vectorizer = CountVectorizer(lowercase=False, token_pattern=r'(?u)\b\S\S+')
+    transformer = TfidfTransformer()
     vec_train = vectorizer.fit_transform(train_text)
     tfidf_train = transformer.fit_transform(vec_train)
-    # 预测
     vec_test = vectorizer.transform(test_text)
     tfidf_test = transformer.transform(vec_test)
 
-    weight_train = tfidf_train.toarray()  # 将tf-idf矩阵抽取出来，元素a[i][j]表示j词在i类文本中的tf-idf权重
+    weight_train = tfidf_train.toarray()
     weight_test = tfidf_test.toarray()
 #     weight_test = tfidf_test.toarray()[-len(test_text): ]
 
-    word = vectorizer.get_feature_names_out()  # 获取词袋模型中的所有词语
+    word = vectorizer.get_feature_names_out()
     word_dict = {word[i]: i for i in range(len(word))}
 
     
@@ -77,7 +74,6 @@ def tfidf_word_embedding(weight, data_dict, texts, word_dict, service_num):
                 if word in word_dict:
                     temp = temp + weight[count][word_dict[word]] * np.array(data_dict[word])
 #                     temp = temp + np.array(data_dict[word])
-                # 否则按零向量处理
 #             temp /= len(words)
         case_embedding.append(temp)
         if (count + 1) % service_num == 0:  #@

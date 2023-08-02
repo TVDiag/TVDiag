@@ -62,15 +62,15 @@ class FastTextLab:
                     loop += 1
                     if loop >= 10 * sample_num:
                         break
-                    # 随机选取相应label的序列进行复制
+
                     chosen_text, label = anomaly_texts[random.randint(0, len(anomaly_texts) - 1)].split('\t')
                     chosen_text_splits = chosen_text.split()
                     if len(chosen_text_splits) < 1:
                         continue
-                    # 随机选取若干事件进行替换
+
                     edit_event_ids = random.sample(range(len(chosen_text_splits)), 1)
                     for event_id in edit_event_ids:
-                        # 替换被选中的事件，选取离他距离最近的事件用于替换
+
                         nearest_event = model.get_nearest_neighbors(chosen_text_splits[event_id])[0][-1]
                         chosen_text_splits[event_id] = nearest_event
                     da_train_data.append(
@@ -125,7 +125,7 @@ class FastTextLab:
 
 def run_fasttext(type: str, data_path, demo_datas, nodes, labels, embedding_dim):
     print('============================ process the {} ================================='.format(type))
-    # event embedding流程；基于数据增强
+
     start_ts = time.time()
     lab2 = FastTextLab(type, data_path, demo_datas, nodes, labels, embedding_dim)
     lab2.do_lab()

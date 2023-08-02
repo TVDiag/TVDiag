@@ -5,34 +5,6 @@ from torch.nn import BatchNorm1d
 import dgl.nn.pytorch as dglnn
 
 
-# class TAGClassifier(nn.Module):
-#     """
-#     两层TAGConv+最大池化+线性分类器
-#     """
-#
-#     def __init__(self, in_dim, hidden_dim):
-#         super(TAGClassifier, self).__init__()
-#         self.conv1 = dglnn.TAGConv(in_dim, hidden_dim, activation=torch.relu)
-#         self.conv2 = dglnn.TAGConv(hidden_dim, hidden_dim, activation=torch.relu)
-#         # self.pool = dglnn.AvgPooling()
-#         self.pool = dglnn.MaxPooling()
-#         # self.classify = nn.Linear(hidden_dim, n_classes)
-#
-#     def forward(self, g, h):
-#         h = self.conv1(g, h)
-#         h = self.conv2(g, h)
-#         h = self.pool(g, h)
-#         return h
-#
-#     def get_embeds(self, g, h, pool=False):
-#         h = self.conv1(g, h)
-#         # h = F.dropout(h, p=0.5, training=True)
-#         h = self.conv2(g, h)
-#         # h = F.dropout(h, p=0.5, training=True)
-#         if pool:
-#             h = self.pool(g, h)
-#         return h
-
 class GraphModel(nn.Module):
     def __init__(self, in_dim, graph_hiddens=[64, 128], device='cpu', attn_head=4, activation=0.2, **kwargs):
         super(GraphModel, self).__init__()
