@@ -34,10 +34,6 @@ TVDiag is a multimodal failure diagnosis framework designed to locate the root c
 │   └── gaia
 │       ├── fasttext
 │       └── raw
-├── draw
-│   ├── digits_tsne-pastel.png
-│   ├── gaia_dependency.py
-│   └── t_sne.py
 ├── helper
 │   ├── eval.py
 │   ├── io.py
