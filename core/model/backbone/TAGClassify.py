@@ -5,9 +5,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class TAGClassifier(nn.Module):
-    """
-    两层TAGConv+最大池化+线性分类器
-    """
 
     def __init__(self, in_dim, hidden_dim, n_classes):
         super(TAGClassifier, self).__init__()
