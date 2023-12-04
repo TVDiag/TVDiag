@@ -14,5 +14,4 @@ class FullyConnected(nn.Module):
 
     def forward(self, x: torch.Tensor): #[batch_size, in_dim]
         x = self.net(x)
-        x = torch.softmax(x, dim=1)
         return x

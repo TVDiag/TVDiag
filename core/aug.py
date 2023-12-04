@@ -4,7 +4,6 @@
 
 import copy
 import random
-from helper import io
 
 import dgl
 import torch
@@ -20,7 +19,7 @@ def aug_drop_node(graph, root, drop_percent=0.2):
     all_node_list = [i for i in range(num) if i != root]
     drop_node_list = random.sample(all_node_list, drop_num)
     aug_graph.remove_nodes(drop_node_list)
-    # aug_graph = add_self_loop_if_not_in(aug_graph)
+    aug_graph = add_self_loop_if_not_in(aug_graph)
     return aug_graph
 
 
@@ -43,6 +42,7 @@ def aug_random_walk(graph, root, drop_percent=0.2):
     trace = dgl.sampling.random_walk(rg, [root], length=retain_num, return_eids=True)[1]
     edges = trace.flatten()
     subgraph = dgl.edge_subgraph(graph, edges, store_ids=False)
+    subgraph = add_self_loop_if_not_in(subgraph)
     return subgraph
 
 

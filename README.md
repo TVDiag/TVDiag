@@ -8,11 +8,7 @@ TVDiag is a multimodal failure diagnosis framework designed to locate the root c
 ## Project Structure
 ```
 .
-├── config
-│   └── experiment.yaml
 ├── core
-│   ├── aug.py
-│   ├── ita.py
 │   ├── loss
 │   │   ├── AutomaticWeightedLoss.py
 │   │   ├── SupervisedContrastiveLoss.py
@@ -20,32 +16,32 @@ TVDiag is a multimodal failure diagnosis framework designed to locate the root c
 │   ├── model
 │   │   ├── backbone
 │   │   │   ├── FC.py
-│   │   │   ├── GAT.py
-│   │   │   └── TAGClassify.py
+│   │   │   ├── gatv2.py
+│   │   │   └── cnn1d.py
 │   │   ├── Classifier.py
 │   │   ├── Encoder.py
 │   │   └── MainModel.py
+│   ├── aug.py
+│   ├── ita.py
 │   ├── multimodal_dataset.py
 │   └── TVDiag.py
 ├── data
-│   ├── aiops22-pod
-│   │   ├── fasttext
-│   │   └── raw
 │   └── gaia
-│       ├── fasttext
-│       └── raw
+│       ├── tmp
+│       ├── raw
+│       └── label.csv
 ├── helper
 │   ├── eval.py
-│   ├── io.py
-│   ├── paths.py
-│   └── timer.py
+│   ├── io_uitl.py
+│   ├── logger.py
+│   ├── scaler.py
+│   └── time_util.py
 ├── process
-│   ├── AIOps22Process.py
-│   ├── BaseProcess.py
 │   ├── events
-│   │   ├── fasttext_with_DA.py
-│   │   └── sententce_embedding.py
-│   └── GaiaProcess.py
+│   │   ├── fasttext_w2v.py
+│   │   ├── cnn1d_w2v.py
+│   │   └── lda_w2v.py
+│   └── EventProcess.py
 ├── requirements.txt
 ├── README.md
 └── main.py
@@ -70,16 +66,15 @@ pip install -r requirements.txt
 
 You can directly run the below commands (the default config path is `config/experiment.yaml`):
 ``` python
-python main.py
+python main.py --dataset "gaia" --N_I 10 --N_T 5 --epochs 1500 --feat_drop 0.5 --attn_drop 0.5
 ```
-Or you can modify the `config_path` in helper/paths.py.
 
 ## Parameters
 
-The parameters in `config/experiment.yaml` are described as follows:
+The parameters in `main.py` are described as follows:
 
 <B>Common args</B>
-- `dataset_name`: The dataset that you want to use.
+- `dataset`: The dataset that you want to use.
 - `reconstruct`: This parameter represents whether the events should be regenerated. (Default: False)
 
 <B>Model</B>

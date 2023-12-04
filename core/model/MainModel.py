@@ -11,23 +11,29 @@ class MainModel(nn.Module):
 
         self.args = args
 
-        self.metric_encoder = Encoder(in_dim=args['metric_embedding_dim'],
-                                      hiddens=args['graph_hidden'],                                
-                                      out_dim=args['graph_out'])
-        self.trace_encoder = Encoder(in_dim=args['trace_embedding_dim'],
-                                     hiddens=args['graph_hidden'],
-                                      out_dim=args['graph_out'])
-        self.log_encoder = Encoder(in_dim=args['log_embedding_dim'],
-                                   hiddens=args['graph_hidden'],
-                                   out_dim=args['graph_out'])
-        fuse_dim = self.metric_encoder.out_dim + self.trace_encoder.out_dim + self.log_encoder.out_dim
+        self.metric_encoder = Encoder(in_dim=args.embedding_dim,
+                                      feat_drop=args.feat_drop,
+                                      attn_drop=args.attn_drop,
+                                      graph_hidden_dim=args.graph_hidden,                                
+                                      out_dim=args.graph_out)
+        self.trace_encoder = Encoder(in_dim=args.embedding_dim,
+                                      feat_drop=args.feat_drop,
+                                      attn_drop=args.attn_drop,
+                                      graph_hidden_dim=args.graph_hidden,                                
+                                      out_dim=args.graph_out)
+        self.log_encoder = Encoder(in_dim=args.embedding_dim,
+                                      feat_drop=args.feat_drop,
+                                      attn_drop=args.attn_drop,
+                                      graph_hidden_dim=args.graph_hidden,                                
+                                      out_dim=args.graph_out)
+        fuse_dim = 3 * args.graph_out
 
         self.locator = Classifyer(in_dim=fuse_dim, 
-                                  hiddens=args['linear_hiddens'],
-                                  out_dim=args['N_I'])
+                                  hiddens=args.linear_hidden,
+                                  out_dim=args.N_I)
         self.typeClassifier = Classifyer(in_dim=fuse_dim,
-                                         hiddens=args['linear_hiddens'],
-                                         out_dim=args['N_A'])
+                                         hiddens=args.linear_hidden,
+                                         out_dim=args.N_T)
 
     def forward(self, batch_graphs):
         x_m = batch_graphs.ndata['metrics']

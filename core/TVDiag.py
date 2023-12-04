@@ -1,4 +1,3 @@
-import logging
 import os
 import time
 
@@ -9,13 +8,12 @@ import torch.nn.functional as F
 from torch.utils.tensorboard import SummaryWriter
 import shutil
 from core.ita import cal_task_affinity
-from helper.eval import *
 from core.loss.UnsupervisedContrastiveLoss import UspConLoss
 from core.loss.SupervisedContrastiveLoss import SupConLoss
 from core.loss.AutomaticWeightedLoss import AutomaticWeightedLoss
 from core.model.MainModel import MainModel
 from core.aug import *
-
+from helper.eval import *
 
 def save_checkpoint(state, is_best, filename='checkpoint.pth.tar'):
     torch.save(state, filename)
@@ -25,39 +23,33 @@ def save_checkpoint(state, is_best, filename='checkpoint.pth.tar'):
 
 class TVDiag(object):
 
-    def __init__(self, args, device):
+    def __init__(self, args, logger, device):
         self.args = args
         self.device = device
+        self.logger = logger
 
-        self.lr = args['lr']
-        self.weight_decay = args['weight_decay']
-        self.epochs = self.args['epochs']
-        self.eval_period = self.args['eval_period']
-        self.log_every_n_steps = self.args['log_every_n_steps']
-        self.tau = self.args['temperature']
-
-        log_dir = os.path.join(self.args['log_dir'], self.args['dataset_name'])
+        self.lr = args.lr
+        self.weight_decay = args.weight_decay
+        self.epochs = args.epochs
+        self.eval_period = args.eval_period
+        self.log_every_n_steps = args.log_step
+        self.tau = args.temperature
+        log_dir = f"logs/{args.dataset}"
+        os.makedirs(log_dir, exist_ok=True)
 
         # alias tensorboard='python3 -m tensorboard.main'
-        # tensorboard --logdir=logs
+        # tensorboard --logdir=logs --host=192.168.31.201
         self.writer = SummaryWriter(log_dir)
-        logging.basicConfig(
-            filename=os.path.join(self.writer.log_dir, 'training.log'), level=logging.DEBUG,
-            filemode='w+',
-            format='%(asctime)s [%(levelname)s]: %(message)s',
-            datefmt='%Y-%m-%d %H:%M:%S'
-        )
-
         self.printParams()
 
     def printParams(self):
-        logging.info(f"Training with: {self.device}")
-        logging.info(f"Status of task-oriented learning: {self.args['TO']}")
-        logging.info(f"Status of cross-modal association: {self.args['CM']}")
-        logging.info(f"Status of dynamic_weight: {self.args['dynamic_weight']}")
-        if self.args['aug']:
-            logging.info(f"Augmente the data: {self.args['aug_method']}")
-        logging.info(f"lr: {self.args['lr']}, weight_decay: {self.args['weight_decay']}")
+        self.logger.info(f"Training with: {self.device}")
+        self.logger.info(f"Status of task-oriented learning: {self.args.TO}")
+        self.logger.info(f"Status of cross-modal association: {self.args.CM}")
+        self.logger.info(f"Status of dynamic_weight: {self.args.dynamic_weight}")
+        if self.args.aug:
+            self.logger.info(f"Augmente the data: {self.args.aug_method}")
+        self.logger.info(f"lr: {self.args.lr}, weight_decay: {self.args.weight_decay}")
 
     def train(self, train_dl, test_data):
 
@@ -68,8 +60,8 @@ class TVDiag(object):
         supConLoss = SupConLoss(self.tau)
         uspConLoss = UspConLoss(self.tau)
 
-        logging.info(model)
-        logging.info(f"Start training for {self.epochs} epochs.")
+        self.logger.info(model)
+        self.logger.info(f"Start training for {self.epochs} epochs.")
         
         n_test=0
         best_avg, best_f1 = 0, 0
@@ -95,12 +87,12 @@ class TVDiag(object):
                 opt.zero_grad()
                 
                 # aug
-                if self.args['aug']:
-                    p = self.args['aug_percent']
+                if self.args.aug:
+                    p = self.args.aug_percent
                     graph_list = dgl.unbatch(batch_graphs)
-                    if self.args['aug_method'] == 'node_drop':
+                    if self.args.aug_method == 'node_drop':
                         aug_graph_list = aug_drop_node_list(graph_list, instance_labels, p)
-                    elif self.args['aug_method'] == 'random_walk':
+                    elif self.args.aug_method == 'random_walk':
                         aug_graph_list = aug_random_walk_list(graph_list, instance_labels, p)
                     batch_graphs = dgl.batch(aug_graph_list + graph_list)
                     instance_labels = torch.cat((instance_labels, instance_labels), dim=0)
@@ -110,27 +102,33 @@ class TVDiag(object):
 
                 # Task-oriented learning
                 l_to, l_cm = 0, 0
-                if self.args['TO']:
+                if self.args.TO:
                     l_to = supConLoss(f_m, instance_labels) + \
                         supConLoss(f_t, instance_labels) + \
                                    supConLoss(f_l, type_labels)
 
                 # Cross-modal association
-                if self.args['CM']:
-                    l_cm = uspConLoss(f_m, f_l) + \
-                        uspConLoss(f_m, f_t)
+                if self.args.CM:
+                    l_cm = uspConLoss(f_m, f_t) + \
+                        uspConLoss(f_m, f_l)
                 
                 # Failure Diagnosis
-                gamma = self.args['guide_weight']
+                gamma = self.args.guide_weight
+                # if epoch < 300:
+                #     l_con = gamma * (l_to + l_cm) 
+                # else:
+                #     l_con = gamma* (l_to)
+                
                 l_con = gamma * (l_to + l_cm)
+
                 l_rcl = F.cross_entropy(root_logit, instance_labels)
                 l_fti = F.cross_entropy(type_logit, type_labels)
-                if self.args['dynamic_weight']:
+                if self.args.dynamic_weight:
                     total_loss = awl(l_rcl, l_fti, l_con)
                 else:
                     total_loss = l_con + l_rcl + l_fti
 
-                logging.debug("con_loss: {:.3f}, RCA_loss: {:.3f}, TC_loss: {:.3f}"
+                self.logger.debug("con_loss: {:.3f}, RCA_loss: {:.3f}, TC_loss: {:.3f}"
                       .format(l_con, l_rcl, l_fti))
 
                 
@@ -153,7 +151,7 @@ class TVDiag(object):
             end_time = time.time()
             time_per_epoch = (end_time - start_time)
             fit_times.append(time_per_epoch)
-            logging.info("Epoch {} done. Loss: {:.3f}, Time per epoch: {:.3f}[s]"
+            self.logger.info("Epoch {} done. Loss: {:.3f}, Time per epoch: {:.3f}[s]"
                          .format(epoch, mean_epoch_loss, time_per_epoch))
 
             top1, top3, top5 = accuracy(root_logit, instance_labels, topk=(1, 3, 5))
@@ -195,9 +193,9 @@ class TVDiag(object):
                 rec = recall(type_logit, type_labels, k=5)
                 f1 = f1score(type_logit, type_labels, k=5)
 
-                logging.info("Validation Results - Epoch: {}".format(epoch))
-                logging.info("[Root localization] top1: {:.3%}, top2: {:.3%}, top3: {:.3%}, top4: {:.3%}, top5: {:.3%}, avg@5: {:.3f}".format(top1, top2, top3, top4, top5, avg_5))
-                logging.info("[Failure type classification] precision: {:.3%}, recall: {:.3%}, f1-score: {:.3%}".format(pre, rec, f1))
+                self.logger.info("Validation Results - Epoch: {}".format(epoch))
+                self.logger.info("[Root localization] top1: {:.3%}, top2: {:.3%}, top3: {:.3%}, top4: {:.3%}, top5: {:.3%}, avg@5: {:.3f}".format(top1, top2, top3, top4, top5, avg_5))
+                self.logger.info("[Failure type classification] precision: {:.3%}, recall: {:.3%}, f1-score: {:.3%}".format(pre, rec, f1))
 
                 self.writer.add_scalar('test/top1', top1, global_step=n_test)
                 self.writer.add_scalar('test/top3', top3, global_step=n_test)
@@ -205,7 +203,7 @@ class TVDiag(object):
                 self.writer.add_scalar('test/precision', pre, global_step=n_test)
                 self.writer.add_scalar('test/recall', rec, global_step=n_test)
                 self.writer.add_scalar('test/f1-score', f1, global_step=n_test)
-                logging.info("Time of test: {:.3f}[s]"
+                self.logger.info("Time of test: {:.3f}[s]"
                          .format(time_test))
                 
                 if (avg_5 + f1) > (best_avg + best_f1):
@@ -228,13 +226,13 @@ class TVDiag(object):
                     torch.save(state, os.path.join(self.writer.log_dir, 'model_best.pth.tar'))   
 
                  
-        logging.info("Training has finished.")
+        self.logger.info("Training has finished.")
         # calculate the training time for raw data
-        logging.debug(f"The average training time per epoch is {np.mean(fit_times)/2}")
-        logging.debug(f"The average predict time is {np.mean(test_times)}")
-        logging.debug(f"The affinity of RCL -> FTI is {np.mean(Z_r2f)}")
-        logging.debug(f"The affinity of FTI -> RCL is {np.mean(Z_f2r)}")
+        self.logger.debug(f"The average training time per epoch is {np.mean(fit_times)/2}")
+        self.logger.debug(f"The average predict time is {np.mean(test_times)}")
+        self.logger.debug(f"The affinity of RCL -> FTI is {np.mean(Z_r2f)}")
+        self.logger.debug(f"The affinity of FTI -> RCL is {np.mean(Z_f2r)}")
         for key in best_data.keys():
-            logging.debug(f'{key}: {best_data[key]}')
+            self.logger.debug(f'{key}: {best_data[key]}')
             print(f'{key}: {best_data[key]}')
-        logging.info(f"Model checkpoint and metadata has been saved at {self.writer.log_dir}.")
+        self.logger.info(f"Model checkpoint and metadata has been saved at {self.writer.log_dir}.")

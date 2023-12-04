@@ -1,5 +1,5 @@
 
-from core.model.backbone.GAT import *
+import torch.nn as nn 
 from core.model.backbone.FC import FullyConnected
 
 
