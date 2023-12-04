@@ -80,7 +80,7 @@ The parameters in `main.py` are described as follows:
 <B>Model</B>
 - `TO`: TO denotes whether the task-oriented learning module should be loaded. (Default: True)
 - `CM`: CM denotes whether the cross-modal association should be established. (Default: True)
-- `guide_weight`: This parameter adjusts the scale of the contrastive loss. (Default: 0.1)
+- `guide_weight`: This parameter adjusts the scale of the contrastive loss. (Default: 0.3)
 - `aug`: This parameter represents whether the data augmentation strategy should be used. (Default: True)
 - `aug_method`: Two data augmentation strategies are available: node_drop and random_walk. (Default: node_drop)
 - `aug_percent`:  The inactivation probability. (Default: 0.2)
