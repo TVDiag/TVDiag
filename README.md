@@ -60,6 +60,7 @@ The statistics of two datasets are list below:
 | AIOps-22 | 364/88            | 40/9                          |
 
 The distribution of root causes and failure types are displayed as follows:
+<br>
 <img src="imgs/rc_dist.png" width = "500" height = "200" alt="" align=center /><img src="imgs/ft_dist.png" width = "500" height = "200" alt="" align=center />
 
 
