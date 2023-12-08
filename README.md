@@ -53,6 +53,15 @@ We conducted experiments on two datasets:
 - [GAIA](https://github.com/CloudWise-OpenSource/GAIA-DataSet). GAIA dataset records metrics, traces, and logs of the MicroSS simulation system in July 2021, which consists of ten microservices and some middleware such as Redis, MySQL, and Zookeeper. The extracted events of GAIA can be accessible on [DiagFusion](https://arxiv.org/abs/2302.10512).
 - [AIOps-22](https://competition.aiops-challenge.com). The AIOps-22 dataset is derived from the training data released by the AIOps 2022 Challenge, where failures at three levels (node, service, and instance) were injected into a Web-based e-commerce platform [Online-boutique](https://github.com/GoogleCloudPlatform/microservices-demo).
 
+The statistics of two datasets are list below:
+| Dataset  | # Traing /# Test | # Instances /# Failure Types |
+|----------|------------------|-------------------------------|
+| GAIA     | 160/939            | 10/5                          |
+| AIOps-22 | 364/88            | 40/9                          |
+
+The distribution of root causes and failure types are displayed as follows:
+<img src="imgs/rc_dist.png" width = "500" height = "200" alt="" align=center /><img src="imgs/ft_dist.png" width = "500" height = "200" alt="" align=center />
+
 
 ## Getting Started
 
