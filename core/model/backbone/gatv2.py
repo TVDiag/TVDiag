@@ -24,7 +24,7 @@ class GATEncoder(nn.Module):
                 num_heads=heads[0],
                 residual=False,
                 activation=self.activation,
-                bias=True,
+                bias=False,
                 share_weights=True,
             )
         )
@@ -36,7 +36,7 @@ class GATEncoder(nn.Module):
                     out_feats=hidden_dim,
                     num_heads=heads[l],
                     activation=self.activation,
-                    bias=True,
+                    bias=False,
                     feat_drop=feat_drop,
                     attn_drop=attn_drop,
                     share_weights=True,
@@ -51,7 +51,7 @@ class GATEncoder(nn.Module):
                 feat_drop=feat_drop,
                 attn_drop=attn_drop,
                 activation=None,
-                bias=True,
+                bias=False,
                 share_weights=True,
             )
         )
